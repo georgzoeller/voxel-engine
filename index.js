@@ -57,7 +57,7 @@ function Game(opts) {
   this.antialias = opts.antialias
   this.playerHeight = opts.playerHeight || 1.62
   this.meshType = opts.meshType || 'surfaceMesh'
-  this.mesher = opts.mesher || voxel.meshers.transgreedy
+  this.mesher = opts.mesher || voxel.meshers.greedy
   this.materialType = opts.materialType || THREE.MeshLambertMaterial
   this.materialParams = opts.materialParams || {}
   this.materialTransparentTypes = opts.materialTransparentTypes || {} // TODO: automatically get from voxel-texture
@@ -106,6 +106,7 @@ function Game(opts) {
       materialType: opts.materialType || THREE.MeshLambertMaterial,
       materialParams: opts.materialParams || {},
       materialFlatColor: opts.materialFlatColor === true,
+      useTransparency: false,
       game: this
     })
     if (opts.appendDocument) this.appendTo(document.body)
