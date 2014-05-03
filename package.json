@@ -19,7 +19,7 @@
     "voxel-control": "git://github.com/deathcap/voxel-control.git#44540136f963b7aa0dda1363b837540e6b6bcb1e",
     "voxel-texture": "0.5.8",
     "artpacks": "^0.3.1",
-    "voxel-physical": "git://github.com/deathcap/voxel-physical.git#4deb6d93aca18aa8b12a813aedd457a451eec2bd",
+    "voxel-physical": "git://github.com/deathcap/voxel-physical.git#de00b0a2261ca5f0ad6e134fc0066b372b61e401",
     "voxel-region-change": "0.1.0",
     "raf": "0.0.1",
     "three": "0.66.2",
