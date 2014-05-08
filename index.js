@@ -23,6 +23,7 @@ var kb = require('kb-controls')
 var physical = require('voxel-physical')
 var pin = require('pin-it')
 var tic = require('tic')()
+var createPlugins = require('voxel-plugins')
 
 module.exports = Game
 
@@ -136,6 +137,15 @@ function Game(opts) {
   }, 2000)
 
   this.initializeControls(opts)
+
+  // setup plugins
+  var plugins = createPlugins(this, {require: opts.require || require})
+  var pluginOpts = opts.pluginOpts || {}
+
+  for (var name in pluginOpts) {
+    plugins.add(name, pluginOpts[name])
+  }
+  plugins.loadAll()
 }
 
 inherits(Game, EventEmitter)
