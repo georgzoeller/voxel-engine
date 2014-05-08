@@ -148,6 +148,10 @@ function Game(opts) {
     plugins.add(name, pluginOpts[name])
   }
   plugins.loadAll()
+
+  var registry = game.plugins.get('voxel-registry')
+  if (registry)
+    this.materials.load(registry.getBlockPropsAll('texture')) // TODO: have voxel-registry do this? on post-plugin load
 }
 
 inherits(Game, EventEmitter)
