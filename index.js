@@ -484,11 +484,16 @@ Game.prototype.potentialCollisionSet = function() {
  * @return {Array} an [x, y, z] tuple
  */
 
-Game.prototype.playerPosition = function() {
-  var target = this.controls.target()
-  if (!target) return this.cameraPosition()
-  var position = target.avatar.position
-  return [position.x, position.y, position.z]
+Game.prototype.playerPosition = function()
+{
+  if (this.controls)
+  {
+    var target = this.controls.target()
+    var position = target.avatar.position
+    return [position.x, position.y, position.z]
+  }
+  else
+    return this.cameraPosition()
 }
 
 Game.prototype.playerAABB = function(position) {
