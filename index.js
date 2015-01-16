@@ -167,10 +167,7 @@ function Game(opts) {
 
 
   for (var name in pluginOpts) {
-    if (name != "voxel-engine")
-    {
       plugins.add(name, pluginOpts[name])
-    }
   }
   plugins.loadAll()
 
