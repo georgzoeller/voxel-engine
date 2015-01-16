@@ -16,7 +16,6 @@ var regionChange = require('voxel-region-change')
 var physical = require('voxel-physicals')
 var pin = require('pin-it')
 var tic = require('tic')()
-
 var ndarray = require('ndarray')
 var isndarray = require('isndarray')
 
@@ -152,7 +151,14 @@ function Game(opts) {
     self.removeFarChunks()
   })
 
+  // client side only after this point
+  if (!this.isClient) return
+
+  // materials
+  //this.materialNames = opts.materials || [['grass', 'dirt', 'grass_dirt'], 'brick', 'dirt']
   this.materialNames = opts.materials
+
+  //this.paused = true // TODO: should it start paused, then unpause when pointer lock is acquired?
 
   this.initializeControls(opts)
 
@@ -163,30 +169,10 @@ function Game(opts) {
     pluginOpts[name] = pluginOpts[name] || BUILTIN_PLUGIN_OPTS[name]
   }
 
-
-
-
   for (var name in pluginOpts) {
-      plugins.add(name, pluginOpts[name])
+    plugins.add(name, pluginOpts[name])
   }
   plugins.loadAll()
-
-  // client side only after this point
-  if (!this.isClient)
-  {
-    self.handleChunkGeneration()
-    return
-  }
-
-  // materials
-  //this.materialNames = opts.materials || [['grass', 'dirt', 'grass_dirt'], 'brick', 'dirt']
-
-
-
-  //this.paused = true // TODO: should it start paused, then unpause when pointer lock is acquired?
-
-
-
 
 
   // textures loaded, now can render chunks
@@ -203,7 +189,6 @@ function Game(opts) {
   this.mesherPlugin = plugins.get('voxel-mesher')
 
   this.cameraPlugin = plugins.get('game-shell-fps-camera') // TODO: support other plugins implementing same API
-
 
 
 }
@@ -231,7 +216,7 @@ Game.prototype.cameraPosition = function() {
   return _position
 }
 
-var _cameraVector = [0,0,0]
+var _cameraVector = vector.create()
 Game.prototype.cameraVector = function() {
   if (this.cameraPlugin) {
     this.cameraPlugin.getVector(_cameraVector)
@@ -489,6 +474,8 @@ Game.prototype.playerPosition = function()
   if (this.controls)
   {
     var target = this.controls.target()
+    if (!target)
+      return this.cameraPosition()
     var position = target.avatar.position
     return [position.x, position.y, position.z]
   }
@@ -660,31 +647,21 @@ Game.prototype.showChunk = function(chunk, optionalPosition) {
   //console.log('showChunk',chunkIndex,'density=',JSON.stringify(chunkDensity(chunk)))
 
   var voxelArray = isndarray(chunk) ? chunk : ndarray(chunk.voxels, chunk.dims)
+  var mesh = this.mesherPlugin.createVoxelMesh(this.shell.gl, voxelArray, this.stitcher.voxelSideTextureIDs, this.stitcher.voxelSideTextureSizes, chunk.position, this.chunkPad)
 
-
-  if (this.isClient)
-  {
-    var mesh = this.mesherPlugin.createVoxelMesh(this.shell.gl, voxelArray, this.stitcher.voxelSideTextureIDs, this.stitcher.voxelSideTextureSizes, chunk.position, this.chunkPad)
-    if (!mesh)
-    {
-      // no voxels
-      return null
-    }
+  if (!mesh) {
+    // no voxels
+    return null
   }
 
   this.voxels.chunks[chunkIndex] = chunk
-
-  if (this.isClient)
-  {
-    if (this.voxels.meshes[chunkIndex])
-    {
-      // TODO: remove mesh if exists
-      //if (this.voxels.meshes[chunkIndex].surfaceMesh) this.scene.remove(this.voxels.meshes[chunkIndex].surfaceMesh)
-      //if (this.voxels.meshes[chunkIndex].wireMesh) this.scene.remove(this.voxels.meshes[chunkIndex].wireMesh)
-    }
-    this.voxels.meshes[chunkIndex] = mesh
-    this.emit('renderChunk', chunk)
+  if (this.voxels.meshes[chunkIndex]) {
+    // TODO: remove mesh if exists
+    //if (this.voxels.meshes[chunkIndex].surfaceMesh) this.scene.remove(this.voxels.meshes[chunkIndex].surfaceMesh)
+    //if (this.voxels.meshes[chunkIndex].wireMesh) this.scene.remove(this.voxels.meshes[chunkIndex].wireMesh)
   }
+  this.voxels.meshes[chunkIndex] = mesh
+  this.emit('renderChunk', chunk)
   return mesh
 }
 
@@ -729,14 +706,8 @@ Game.prototype.tick = function(delta) {
   this.emit('tick', delta)
 
   //if (!this.controls) return // this.controls removed; still load chunks
-
-  // TODO: This needs to run on the server IF there is a player connected
-
-  if (this.isClient )
-  {
-    var playerPos = this.playerPosition()
-    this.spatial.emit('position', playerPos, playerPos)
-  }
+  var playerPos = this.playerPosition()
+  this.spatial.emit('position', playerPos, playerPos)
 }
 
 Game.prototype.render = function(delta) {
@@ -804,9 +775,6 @@ var filtered_vkey = function(k) {
 
 Game.prototype.initializeControls = function(opts) {
   // player control - game-shell handles most controls now
-
-  if (!this.isClient)
-    return
 
   // initial keybindings passed in from options
   Object.defineProperty(this, 'keybindings', {get:function() { throw new Error('voxel-engine "keybindings" property removed') }})
